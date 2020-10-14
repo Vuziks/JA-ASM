@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "testASM": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    },
+    "FiltrGraficzny": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
