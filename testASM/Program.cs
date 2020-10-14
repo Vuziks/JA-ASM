@@ -14,7 +14,7 @@ namespace testASM
             int threadCount = 4;
             int stride = GetStride(bmp);
             byte red = 200, green = 100, blue = 50;
-            bool useASM = false;
+            bool useASM = true;
 
             byte[] inByte = ImageToByte(bmp);
             byte[] resultByte = ImageToByte(bmp);
@@ -27,10 +27,24 @@ namespace testASM
                     {
                         unsafe
                         {
-                            ASM.AddFilterASM(2.0, 3.0);
+                            //Bitmap ImageOut = new Bitmap(bmp.Width, bmp.Height, PixelFormat.Format24bppRgb);
+                            //Bitmap ImageIn = new Bitmap(bmp.Width, bmp.Height, PixelFormat.Format24bppRgb);
+                            BitmapData bitmapInData = bmp.LockBits(new Rectangle(0, 0,
+                                bmp.Width, bmp.Height),
+                                ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+                            BitmapData bitmapOutData = new BitmapData();
+
+                            ASM.AddFilterASM((byte*)bitmapOutData.Scan0.ToPointer(),
+                            (byte*)bitmapInData.Scan0.ToPointer(),
+                            0.5,
+                            54,
+                            bmp.Width * bmp.Height * 3,
+                            red, green, blue,
+                            bmp.Width,
+                            stride);
                         }
                     }
-                    File.WriteAllBytes("wynik.bmp", resultByte);
+                    //File.WriteAllBytes("wynik.bmp", resultByte); zapis btimapOutData do pliku
                     break;
 
                 case false:
@@ -73,7 +87,15 @@ namespace testASM
     class ASM
     {
         [DllImport(@"C:\Users\CLEVO\source\repos\JA-ASM\x64\Debug\AsmDll.dll")]
-        public static unsafe extern void AddFilterASM(double a, double b);
+        public static unsafe extern void AddFilterASM(
+            byte* resultBitmap,
+            byte* originalBitmap,
+            double opacity,
+            int offset,
+            int byteCount,
+            byte red, byte green, byte blue,
+            int rowWidth,
+            int stride);
     }
 }
 
