@@ -1,8 +1,10 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Diagnostics;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace testASM
 {
@@ -10,46 +12,148 @@ namespace testASM
     {
         static void Main(string[] args)
         {
-            //C#
-            Bitmap bmp = new Bitmap(@"D:\studia\Gildia Magów Ognia\JA\projekt\aei.bmp");
+            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\aei.bmp";
+            double filterOpacity = 0.9;
+            byte red = 128, green = 10, blue = 20;
+            Bitmap bmp = new Bitmap(filename);
+            Bitmap imageIn;
+            Bitmap ImageOut;
+            imageIn = ConvertTo24bpp(bmp);
+            ImageOut = new Bitmap(imageIn.Width, imageIn.Height, PixelFormat.Format24bppRgb);
 
-            BitmapData data = bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            int splitCount = 1;
+            int threadCount = splitCount;
+            int ImageByteCount = imageIn.Height * GetStride(imageIn);
+            int bytesToProcess = ImageByteCount / splitCount;
+            int remainder = ImageByteCount % splitCount;
+            int i = 0;
+            bool useASM = true;
+
+            BitmapData bitmapOutData = null, bitmapInData = null;
+
+            bitmapOutData = ImageOut.LockBits(new Rectangle(0, 0,
+               imageIn.Width, imageIn.Height),
+               ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+
+            bitmapInData = imageIn.LockBits(new Rectangle(0, 0,
+            imageIn.Width, imageIn.Height),
+            ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+
+            byte[] bufferOut = new byte[bitmapOutData.Stride * bitmapOutData.Height];
+            byte[] bufferIn = new byte[bitmapInData.Stride * bitmapInData.Height];
+            Marshal.Copy(bitmapInData.Scan0, bufferIn, 0, bufferIn.Length);
+
+            Stopwatch watch = new Stopwatch();
+
+            while (i < splitCount)
+            {
+                watch.Start();
+
+                Thread[] threads = new Thread[threadCount];
+                switch (useASM)
+                {
+                    case false:
+                        for (int j = 0; j < threadCount; j++)
+                        {
+                            int begin = bytesToProcess * i;
+                            if (i == splitCount - 1)
+                            {
+                                bytesToProcess += remainder;
+                            }
+                            else if (i >= splitCount)
+                            {
+                                break;
+                            }
+
+                            threads[j] = new Thread(() => 
+                            CsDll.Filter.AddFilterCs(ref bufferOut, bufferIn, filterOpacity, begin, bytesToProcess, red, green, blue, bitmapInData.Width, bitmapInData.Stride));
+                            i++;
+                        }
+                        break;
+
+                    case true:
+                        for (int j = 0; j < threadCount; j++)
+                        {
+
+                            int begin = bytesToProcess * i;
+                            if (i == splitCount - 1)
+                            {
+                                bytesToProcess += remainder;
+                            }
+                            else if (i >= splitCount)
+                            {
+                                break;
+                            }
+                            unsafe
+                            {
+                                threads[j] = new Thread(() =>
+                                ASM.AddFilterASM((byte*)bitmapOutData.Scan0.ToPointer(), (byte*)bitmapInData.Scan0.ToPointer(), filterOpacity, begin, bytesToProcess, red, green, blue, bitmapInData.Width, bitmapInData.Stride));
+                            }
+                            i++;
+                        }
+                        break;
+                }
+
+                for (int j = 0; j < threadCount; j++)
+                {
+                    if (threads[j] == null)
+                    {
+                        break;
+                    }
+                    threads[j].Start();
+                }
+
+                for (int j = 0; j < threadCount; j++)
+                {
+                    if (threads[j] == null)
+                    {
+                        break;
+                    }
+                    threads[j].Join();
+                }
+            }
+            watch.Stop();
+            if(!useASM)
+                Marshal.Copy(bufferOut, 0, bitmapOutData.Scan0, bufferOut.Length);
+
+            ImageOut.UnlockBits(bitmapOutData);
+            imageIn.UnlockBits(bitmapInData);
+            ImageOut.Save("res.bmp");
+            GC.Collect();
+
+            Console.WriteLine(watch.ElapsedMilliseconds);
+        }
+            public static Bitmap ConvertTo24bpp(Image img)
+            {
+                var bmp = new Bitmap(img.Width, img.Height, PixelFormat.Format24bppRgb);
+                using (var gr = Graphics.FromImage(bmp))
+                    gr.DrawImage(img, new Rectangle(0, 0, img.Width, img.Height));
+                return bmp;
+            }
+        
+        public static int GetStride(Bitmap bmp)
+        {
+            BitmapData data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
             int stride = data.Stride;
             bmp.UnlockBits(data);
-
-            //int bitsPerPixel = ((int)bmp.PixelFormat & 0xff00) >> 8;
-            //int bytesPerPixel = (bitsPerPixel + 7) / 8;
-            //var stride2 = 4 * ((bmp.Width * bytesPerPixel + 3) / 4);
-
-            byte[] inByte = ImageToByte(bmp);
-            byte[] resultByte = ImageToByte(bmp);
-
-            CsDll.Filter.AddFilterCs(ref resultByte, inByte, 0.5, 54, bmp.Width*bmp.Height*3, 120, 200, 50, bmp.Width, stride);
-            File.WriteAllBytes("wynik.bmp", resultByte);
-
-
-            //ASM
-            unsafe
-            {
-                ASM.AddFilterASM(2.0, 3.0);
-            }
+            return stride;
         }
-
-
-
-        public static byte[] ImageToByte(Image img)
-        {
-            using (var stream = new MemoryStream())
-            {
-                img.Save(stream, ImageFormat.Bmp);
-                return stream.ToArray();
-            }
-        }
-    }
-    class ASM
-    {
-        [DllImport(@"C:\Users\CLEVO\source\repos\JA-ASM\x64\Debug\AsmDll.dll")]
-        public static unsafe extern void AddFilterASM(double a, double b);
     }
 }
+
+class ASM
+{
+    [DllImport(@"C:\Users\CLEVO\source\repos\JA-ASM\x64\Debug\AsmDll.dll")]
+    public static unsafe extern void AddFilterASM(
+        byte* resultBitmap,
+        byte* originalBitmap,
+        double opacity,
+        int offset,
+        int byteCount,
+        byte red, byte green, byte blue,
+        int rowWidth,
+        int stride);
+}
+
+
 
