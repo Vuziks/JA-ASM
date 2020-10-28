@@ -114,8 +114,11 @@ MainLoop: ;glowna petla programu umozliwiajaca przetworzenie wszystkich bajtow z
 	
 	xor RAX, RAX ;wyzerowanie rejestru RAX
 	xorps XMM0, XMM0 ;wyzerowanie rejestru 128-bitowego XMM0
-	mov	 AL, BYTE PTR [RDX + R10] ;pobranie bajtu z tablicy bajtow obrazu pierwotnego o zadanym indeksie R10 i zapisanie w AL
-	cvtsi2sd XMM0, RAX ;konwersja wartosci subpiksela na typ zmiennoprzecinkowy i przechowanie w rejestrze XMM0
+	;mov	 AL, BYTE PTR [RDX + R10] ;pobranie bajtu z tablicy bajtow obrazu pierwotnego o zadanym indeksie R10 i zapisanie w AL
+	pmovzxbq XMM0, WORD PTR [RDX + R10]	
+	;cvtsi2sd XMM0, XMM0
+	cvtdq2ps XMM0, XMM0
+	;cvtsi2sd XMM0, RAX ;konwersja wartosci subpiksela na typ zmiennoprzecinkowy i przechowanie w rejestrze XMM0
 	mulsd XMM0, XMM1 ;pomnozenie wartosci z XMM0 przez intensywnosc skladowej i zapisanie w XMM0
 	cvtsd2si RAX, XMM0 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w RAX
 	

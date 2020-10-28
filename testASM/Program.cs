@@ -122,8 +122,6 @@ namespace testASM
             GC.Collect();
 
             Console.WriteLine(watch.ElapsedMilliseconds);
-
-
         }
             public static Bitmap ConvertTo24bpp(Image img)
             {
