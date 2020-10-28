@@ -12,31 +12,31 @@ namespace testASM
     {
         static void Main(string[] args)
         {
-            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\10000.png";
-            double filterOpacity = 0.4;
-            byte red = 128, green = 10, blue = 0;
+            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\aei.bmp";
+            double filterOpacity = 0.9;
+            byte red = 128, green = 10, blue = 20;
             Bitmap bmp = new Bitmap(filename);
-            Bitmap ImageIn;
+            Bitmap imageIn;
             Bitmap ImageOut;
-            ImageIn = ConvertTo24bpp(bmp);
-            ImageOut = new Bitmap(ImageIn.Width, ImageIn.Height, PixelFormat.Format24bppRgb);
+            imageIn = ConvertTo24bpp(bmp);
+            ImageOut = new Bitmap(imageIn.Width, imageIn.Height, PixelFormat.Format24bppRgb);
 
-            int SplitCount = 2;
-            int threadCount = 2;
-            int ImageByteCount = ImageIn.Height * GetStride(ImageIn);
-            int bytesToProcess = ImageByteCount / SplitCount;
-            int remainder = ImageByteCount % SplitCount;
+            int splitCount = 1;
+            int threadCount = splitCount;
+            int ImageByteCount = imageIn.Height * GetStride(imageIn);
+            int bytesToProcess = ImageByteCount / splitCount;
+            int remainder = ImageByteCount % splitCount;
             int i = 0;
-            bool useASM = false;
+            bool useASM = true;
 
             BitmapData bitmapOutData = null, bitmapInData = null;
 
             bitmapOutData = ImageOut.LockBits(new Rectangle(0, 0,
-               ImageIn.Width, ImageIn.Height),
+               imageIn.Width, imageIn.Height),
                ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
 
-            bitmapInData = ImageIn.LockBits(new Rectangle(0, 0,
-            ImageIn.Width, ImageIn.Height),
+            bitmapInData = imageIn.LockBits(new Rectangle(0, 0,
+            imageIn.Width, imageIn.Height),
             ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
 
             byte[] bufferOut = new byte[bitmapOutData.Stride * bitmapOutData.Height];
@@ -45,7 +45,7 @@ namespace testASM
 
             Stopwatch watch = new Stopwatch();
 
-            while (i < SplitCount)
+            while (i < splitCount)
             {
                 watch.Start();
 
@@ -56,11 +56,11 @@ namespace testASM
                         for (int j = 0; j < threadCount; j++)
                         {
                             int begin = bytesToProcess * i;
-                            if (i == SplitCount - 1)
+                            if (i == splitCount - 1)
                             {
                                 bytesToProcess += remainder;
                             }
-                            else if (i >= SplitCount)
+                            else if (i >= splitCount)
                             {
                                 break;
                             }
@@ -76,11 +76,11 @@ namespace testASM
                         {
 
                             int begin = bytesToProcess * i;
-                            if (i == SplitCount - 1)
+                            if (i == splitCount - 1)
                             {
                                 bytesToProcess += remainder;
                             }
-                            else if (i >= SplitCount)
+                            else if (i >= splitCount)
                             {
                                 break;
                             }
@@ -117,7 +117,7 @@ namespace testASM
                 Marshal.Copy(bufferOut, 0, bitmapOutData.Scan0, bufferOut.Length);
 
             ImageOut.UnlockBits(bitmapOutData);
-            ImageIn.UnlockBits(bitmapInData);
+            imageIn.UnlockBits(bitmapInData);
             ImageOut.Save("res.bmp");
             GC.Collect();
 
