@@ -21,6 +21,9 @@ _DllMainCRTStartup ENDP
 ;)
 .data
 Mask1 Byte 0,15,15,15,1,15,15,15,2,15,15,15,15,15,15,15
+multipleValue Byte 0,0,0,15,15,15,15,15,15,15,15,15,15,15,15,15
+moveMask Byte 15,15,15,2,3,4,5,6,7,8,9,10,11,12,13,14
+;moveMask Byte 15,14,13,12,11,10,9,8,7,6,5,4,3,0,0,0
 .code
 
 AddFilterASM proc
@@ -53,7 +56,7 @@ AddFilterASM proc
 	cvtsi2sd XMM0, R11 ;konwersja wartosci subpiksela na typ zmiennoprzecinkowy i przechowanie w rejestrze XMM0
 	mulsd XMM0, XMM2 ;pomnozenie wartosci subpiksela przez wartosc krycia i zapisanie w XMM0 (red * opacity)
 	;cvtsd2si R11, XMM0 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w R11
-		movd XMM13, R11 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w R11
+		movd XMM6, R11
 	mov BYTE PTR bgrComponent[2], R11B ;przepisanie czerwonej skladowej filtra z rejestru R11 do tablicy skladowych
 
 	xor R11, R11 ;wyzerowanie rejestru R11
@@ -62,7 +65,8 @@ AddFilterASM proc
 	cvtsi2sd XMM0, R11 ;konwersja wartosci subpiksela na typ zmiennoprzecinkowy i przechowanie w rejestrze XMM0
 	mulsd XMM0, XMM2 ;pomnozenie wartosci subpiksela przez wartosc krycia i zapisanie w XMM0 (green * opacity)
 	;cvtsd2si R11, XMM0 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w R11
-		movd XMM14, R11 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w R11
+		;movdqu XMM14, XMM0
+		movd XMM7, R11
 	mov BYTE PTR bgrComponent[1], R11B ;przepisanie zielonej skladowej filtra z rejestru R11 do tablicy skladowych
 	
 	xor R11, R11 ;wyzerowanie rejestru R11
@@ -71,7 +75,8 @@ AddFilterASM proc
 	cvtsi2sd XMM0, R11 ;konwersja wartosci subpiksela na typ zmiennoprzecinkowy i przechowanie w rejestrze XMM0
 	mulsd XMM0, XMM2 ;pomnozenie wartosci subpiksela przez wartosc krycia i zapisanie w XMM0 (blue * opacity)
 	;cvtsd2si R11, XMM0 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w R11
-		movd XMM15, R11 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w R11
+		;movdqu XMM15, xmm0 
+		movd XMM8, R11
 	mov BYTE PTR bgrComponent[0], R11B ;przepisanie niebieskiej skladowej filtra z rejestru R11 do tablicy skladowych
 
 	mov EAX, DWORD PTR [RBP + 80] ;pobranie szerokosci obrazu w pikselach ze stosu i zapisanie w EAX
@@ -125,10 +130,12 @@ MainLoop: ;glowna petla programu umozliwiajaca przetworzenie wszystkich bajtow z
 	;JU¯ NIE mov	 AL, BYTE PTR [RDX + R10] ;pobranie bajtu z tablicy bajtow obrazu pierwotnego o zadanym indeksie R10 i zapisanie w AL
 		movdqu xmm0, xmmword PTR [RDX + R10]
 		movdqu xmm10, xmm0
+		psrldq xmm10, 1
+		pshufb xmm10, xmmword PTR [moveMask]
 		pslldq	xmm0, 8
 		psrldq xmm0, 8
 		pshufb xmm0, xmmword ptr[Mask1]
-		mulps xmm0, xmm1
+						;mulps xmm0, xmm1   TU MNO¯ENIE RAZY OPACITAT!!!!!!!!!!                      !!!!!!!!!!!!!!!!!!!!!!!!!bez tego jaœniejszy
 		;TERAZ PRZERZUCENIE TYCH TRZECH WARTOŒCI DO AKUMULATORA I PODODAWANIE SK£ADOWYCH
 	;cvt Al, XMM0 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w RAX
 	;movhlps r10, xmm0
@@ -136,25 +143,50 @@ MainLoop: ;glowna petla programu umozliwiajaca przetworzenie wszystkich bajtow z
 
 	add AL, BYTE PTR bgrComponent[RBX] ;dodanie do bajtu wartosci skladowej filtra z uwzglednieniem krycia i zapisanie w AL
 	;;;;PODODAWANIE 13,14,15
-	paddb xmm13, xmm0
+	movdqu xmm13, xmm0
 	psrldq xmm0, 4
-	paddb xmm14, xmm0
-	psrldq xmm0, 4
-	paddb xmm15, xmm0
+	pslldq xmm13, 15
+	psrldq xmm13, 15
 
+	;tu jest xmm13 z jednym BYTE
+			paddb xmm13, xmm6
+	cmovc AX, R11W
+	;tutaj przekracza zakres i pokazuje 55
+
+	movdqu xmm14, xmm0
+	psrldq xmm0, 4
+
+	pslldq xmm14, 15
+	psrldq xmm14, 14
+			paddb xmm13, xmm7
+	movdqu xmm15, xmm0
+	pslldq xmm15, 15
+			paddb xmm13, xmm8
+	psrldq xmm15, 13
+	
+	movd xmm11, r11; <- Do porównania 
+	movdqu xmm12, xmm11; <- Kopia do porównañ
+	
+	;pshufb xmm15, xmmword ptr[multipleValue]
+	
+	paddb xmm10,xmm15
+	paddb xmm10,xmm14
+	;pcmpgtb 
+	paddb xmm10,xmm13
 	;mov BYTE PTR [RCX + R10], xmm13
 	;;;;;;;;;;;;;;;;;;;;;;;;;
 	cmovc AX, R11W ;jesli wystapilo przeniesienie z bitu 7 na 8 (przekroczono maksymalna wartosc dla bajtu), zapisanie 0FFFFh w AX (0FFh w AL)
 	
-	mov BYTE PTR [RCX + R10], AL ;zapisanie obliczonej wartosci bajtu do tablicy bajtow obrazu wynikowego pod tym samym indeksem
+	movdqu xmmword ptr [RCX + R10], xmm10
+	;mov BYTE PTR [RCX + R10], AL ;zapisanie obliczonej wartosci bajtu do tablicy bajtow obrazu wynikowego pod tym samym indeksem
 
-	inc EBX ;inkrementacja EBX, czyli indeksu koloru z tablicy skladowych BGR
-	cmp EBX, 3 ;porownanie wartosci EBX z liczba skladowych piksela (24bpp RGB)
-	cmove EBX, R9D ;zeby uniknac wykroczenia poza zakres tablicy, zapisanie 0 w EBX, jesli EBX jest rowne 3
+	;inc EBX ;inkrementacja EBX, czyli indeksu koloru z tablicy skladowych BGR
+	;cmp EBX, 3 ;porownanie wartosci EBX z liczba skladowych piksela (24bpp RGB)
+	;cmove EBX, R9D ;zeby uniknac wykroczenia poza zakres tablicy, zapisanie 0 w EBX, jesli EBX jest rowne 3
 	
 SkipByte: ;etykieta, do ktorej jest wykonywany skok w przypadku wykrycia bajtu nieprzechowujacego subpiksela
-	inc R10 ;inkrementacja indeksu tablicy R10
-	dec byteCount ;dekrementacja liczby bajtow do przetworzenie
+	add R10, 3 ;inkrementacja indeksu tablicy R10
+	sub byteCount, 3 ;dekrementacja liczby bajtow do przetworzenie
 	jnz MainLoop ;jesli nie przetworzono wszystkich bajtow (byteCount != 0), skok do glownej petli
 
 	;przywrocenie wartosci rejestrow nieulotnych (nonvolatile)

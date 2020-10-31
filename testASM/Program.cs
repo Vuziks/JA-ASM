@@ -12,9 +12,9 @@ namespace testASM
     {
         static void Main(string[] args)
         {
-            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\aei.bmp";
-            float filterOpacity = 0.4f;
-            byte red = 8, green = 9, blue = 10;
+            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\mountain.jpg";
+            float filterOpacity = 0.6f;
+            byte red = 20, green = 20, blue = 20;
             Bitmap bmp = new Bitmap(filename);
             Bitmap imageIn;
             Bitmap ImageOut;
