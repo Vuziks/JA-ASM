@@ -19,8 +19,12 @@ _DllMainCRTStartup ENDP
 ;	int rowWidth			-> STOS
 ;	int stride				-> STOS
 ;)
+.data
+Mask1 Byte 0,15,15,15,1,15,15,15,2,15,15,15,15,15,15,15
+.code
 
 AddFilterASM proc
+
 	;Zmienne przechowujace parametry filtra i obrazu
 	local byteOffset:DWORD ;offset od poczatku tablicy
 	local byteCount:DWORD ;liczba bajtow do przetworzenia
@@ -58,7 +62,7 @@ AddFilterASM proc
 	mulsd XMM0, XMM2 ;pomnozenie wartosci subpiksela przez wartosc krycia i zapisanie w XMM0 (green * opacity)
 	cvtsd2si R11, XMM0 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w R11
 	mov BYTE PTR bgrComponent[1], R11B ;przepisanie zielonej skladowej filtra z rejestru R11 do tablicy skladowych
-
+	
 	xor R11, R11 ;wyzerowanie rejestru R11
 	xorps XMM0, XMM0 ;wyzerowanie rejestru 128-bitowego XMM0
 	mov R11B, BYTE PTR [RBP+72] ;pobranie wartosci skladowej niebieskiej filtra ze stosu i zapisanie w R11B
@@ -97,8 +101,10 @@ AddFilterASM proc
 	
 	mov R9, 0 ;zapisanie liczby 0 w R9
 	mov R11, 1 ;przechowanie w rejestrze R11 wartosci 1 (do obliczania intensywnosci pierwotnych kolorow)
-	cvtsi2sd XMM1, R11 ;konwersja jedynki na typ zmiennoprzecinkowy i przechowanie w rejestrze XMM1
-	subsd XMM1, XMM2 ;odjecie krycia od 1 (XMM1 = [XMM1] - [XMM2]) => obliczenie intensywnosci skladowych obrazu pierwotnego
+	cvtsi2ss XMM1, R11 ;konwersja jedynki na typ zmiennoprzecinkowy i przechowanie w rejestrze XMM1
+	subss XMM1, XMM2 ;odjecie krycia od 1 (XMM1 = [XMM1] - [XMM2]) => obliczenie intensywnosci skladowych obrazu pierwotnego
+	;;;;;;;;;;;PRZESUN¥Æ I ZROBIÆ ¯EBY BY£Y TRZY
+	pshufd xmm1, xmm1, 00000000b
 
 	mov R11W, 0FFFFh ;zapisanie maksymalnej wartosci bajtu w rejestrze R11 (wartosc zajmuje dlugosc slowa, zeby mozna bylo wykonac warunkowe kopiowanie - CMOVcc)
 
@@ -115,11 +121,22 @@ MainLoop: ;glowna petla programu umozliwiajaca przetworzenie wszystkich bajtow z
 	xor RAX, RAX ;wyzerowanie rejestru RAX
 	xorps XMM0, XMM0 ;wyzerowanie rejestru 128-bitowego XMM0
 	mov	 AL, BYTE PTR [RDX + R10] ;pobranie bajtu z tablicy bajtow obrazu pierwotnego o zadanym indeksie R10 i zapisanie w AL
-	cvtsi2sd XMM0, RAX ;konwersja wartosci subpiksela na typ zmiennoprzecinkowy i przechowanie w rejestrze XMM0
-	mulsd XMM0, XMM1 ;pomnozenie wartosci z XMM0 przez intensywnosc skladowej i zapisanie w XMM0
+		movdqu xmm0, xmmword PTR [RDX + R10]
+		pslldq	xmm0, 8
+		psrldq xmm0, 8
+		pshufb xmm0, xmmword ptr[Mask1]
+		;cvt
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;cvtsi2sd XMM0, RAX ;konwersja wartosci subpiksela na typ zmiennoprzecinkowy i przechowanie w rejestrze XMM0
+	
+	;mulsd XMM0, XMM1 ;pomnozenie wartosci z XMM0 przez intensywnosc skladowej i zapisanie w XMM0
+		mulps xmm0, xmm1
+		;pmull
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	cvtsd2si RAX, XMM0 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w RAX
 	
 	add AL, BYTE PTR bgrComponent[RBX] ;dodanie do bajtu wartosci skladowej filtra z uwzglednieniem krycia i zapisanie w AL
+	;;;;;;;;;;;;;;;;;;;;;;;;;
 	cmovc AX, R11W ;jesli wystapilo przeniesienie z bitu 7 na 8 (przekroczono maksymalna wartosc dla bajtu), zapisanie 0FFFFh w AX (0FFh w AL)
 	mov BYTE PTR [RCX + R10], AL ;zapisanie obliczonej wartosci bajtu do tablicy bajtow obrazu wynikowego pod tym samym indeksem
 

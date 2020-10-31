@@ -13,7 +13,7 @@ namespace testASM
         static void Main(string[] args)
         {
             string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\aei.bmp";
-            double filterOpacity = 0.9;
+            float filterOpacity = 0.4f;
             byte red = 128, green = 10, blue = 20;
             Bitmap bmp = new Bitmap(filename);
             Bitmap imageIn;
@@ -66,7 +66,7 @@ namespace testASM
                             }
 
                             threads[j] = new Thread(() => 
-                            CsDll.Filter.AddFilterCs(ref bufferOut, bufferIn, filterOpacity, begin, bytesToProcess, red, green, blue, bitmapInData.Width, bitmapInData.Stride));
+                            CsDll.Filter.AddFilterC(ref bufferOut, bufferIn, filterOpacity, begin, bytesToProcess, red, green, blue, bitmapInData.Width, bitmapInData.Stride));
                             i++;
                         }
                         break;
@@ -149,7 +149,7 @@ class ASM
     public static unsafe extern void AddFilterASM(
         byte* resultBitmap,
         byte* originalBitmap,
-        double opacity,
+        float opacity,
         int offset,
         int byteCount,
         byte red, byte green, byte blue,
