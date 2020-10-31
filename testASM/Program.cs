@@ -14,7 +14,7 @@ namespace testASM
         {
             string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\aei.bmp";
             float filterOpacity = 0.4f;
-            byte red = 128, green = 10, blue = 20;
+            byte red = 8, green = 9, blue = 10;
             Bitmap bmp = new Bitmap(filename);
             Bitmap imageIn;
             Bitmap ImageOut;
