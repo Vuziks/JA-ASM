@@ -13,8 +13,8 @@ namespace testASM
         static void Main(string[] args)
         {
             string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\mountain.jpg";
-            float filterOpacity = 0.6f;
-            byte red = 20, green = 20, blue = 20;
+            float filterOpacity = 0.4f;
+            byte red = 120, green = 0, blue = 200;
             Bitmap bmp = new Bitmap(filename);
             Bitmap imageIn;
             Bitmap ImageOut;
@@ -27,7 +27,7 @@ namespace testASM
             int bytesToProcess = ImageByteCount / splitCount;
             int remainder = ImageByteCount % splitCount;
             int i = 0;
-            bool useASM = true;
+            bool useASM = false;
 
             BitmapData bitmapOutData = null, bitmapInData = null;
 
@@ -87,7 +87,7 @@ namespace testASM
                             unsafe
                             {
                                 threads[j] = new Thread(() =>
-                                ASM.AddFilterASM((byte*)bitmapOutData.Scan0.ToPointer(), (byte*)bitmapInData.Scan0.ToPointer(), filterOpacity, begin, bytesToProcess, red, green, blue, bitmapInData.Width, bitmapInData.Stride));
+                                ASM.AddFilterASM((byte*)bitmapOutData.Scan0.ToPointer(), (byte*)bitmapInData.Scan0.ToPointer(), filterOpacity, begin, bytesToProcess, blue, green, red, bitmapInData.Width, bitmapInData.Stride));
                             }
                             i++;
                         }
