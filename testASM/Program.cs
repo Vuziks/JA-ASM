@@ -12,7 +12,7 @@ namespace testASM
     {
         static void Main(string[] args)
         {
-            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\mountain.jpg";
+            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\aeibig.bmp";
             float filterOpacity = 0.4f;
             byte red = 120, green = 0, blue = 200;
             Bitmap bmp = new Bitmap(filename);
@@ -21,13 +21,13 @@ namespace testASM
             imageIn = ConvertTo24bpp(bmp);
             ImageOut = new Bitmap(imageIn.Width, imageIn.Height, PixelFormat.Format24bppRgb);
 
-            int splitCount = 1;
+            int splitCount = 4;
             int threadCount = splitCount;
             int ImageByteCount = imageIn.Height * GetStride(imageIn);
             int bytesToProcess = ImageByteCount / splitCount;
             int remainder = ImageByteCount % splitCount;
             int i = 0;
-            bool useASM = true;
+            bool useASM = false;
 
             BitmapData bitmapOutData = null, bitmapInData = null;
 
@@ -145,7 +145,7 @@ namespace testASM
 
 class ASM
 {
-    [DllImport(@"C:\Users\CLEVO\source\repos\JA-ASM\x64\Debug\AsmDll.dll")]
+    [DllImport(@"C:\Users\CLEVO\source\repos\JA-ASM\x64\Release\AsmDll.dll")]
     public static unsafe extern void AddFilterASM(
         byte* resultBitmap,
         byte* originalBitmap,

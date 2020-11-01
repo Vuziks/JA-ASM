@@ -122,10 +122,6 @@ MainLoop: ;glowna petla programu umozliwiajaca przetworzenie wszystkich bajtow z
 	pop RDX ;przywrocenie wskaznika na tablice bajtow obrazu pierwotnego ze stosu do RDX
 	sub EAX, rowWidth ;odjecie dlugosci wiersza od indeksu bajtu w wierszu i zapisanie w EAX
 	jns SkipByte ;pominiecie dalszego przetwarzania bajtu w razie, gdy indeks bajtu w wierszu wykracza poza dlugosc wiersza z subpikselami (currentByte % stride - rowWidth >=0 ? skok do SkipByte)
-	
-	xor RAX, RAX ;wyzerowanie rejestru RAX
-	xorps XMM0, XMM0 ;wyzerowanie rejestru 128-bitowego XMM0
-
 		movdqu xmm0, xmmword PTR [RDX + R10]
 		movdqu xmm10, xmm0
 		psrldq xmm10, 1
@@ -133,59 +129,32 @@ MainLoop: ;glowna petla programu umozliwiajaca przetworzenie wszystkich bajtow z
 		pslldq	xmm0, 8
 		psrldq xmm0, 8
 		pshufb xmm0, xmmword ptr[Mask1]
-
-			;pmuldq xmm0, xmm1; TU BY BY£A TA WEKTOROWA
-
 	;sk≥adowe np. 00000000000000AA-000000BB000000CC
 	pmulhuw		xmm0, xmm1 ;wektor
 
-
 	movdqu xmm13, xmm0 ; -> wsadü pierwszπ sk≥adowπ
-				;mulss xmm13, xmm1;mnoøenie razy intense
 	paddb xmm13,xmm6;dodanie policzonego BGR
 	psrldq xmm0, 4
 	pslldq xmm13, 15
 	psrldq xmm13, 15
 
 	movdqu xmm14, xmm0; -> wsadü drugπ sk≥adowπ
-				;mulss xmm14, xmm1;mnoøenie razy intense
 	paddb xmm14,xmm7;dodanie policzonego BGR
 	psrldq xmm0, 4
 	pslldq xmm14, 15
 	psrldq xmm14, 14
 
 	movdqu xmm15, xmm0; -> wsadü trzeciπ sk≥adowπ
-				;mulss xmm15, xmm1;mnoøenie razy intense
 	paddb xmm15,xmm8;dodanie policzonego BGR
 	pslldq xmm15, 15
 	psrldq xmm15, 13
-	
-	;movd xmm11, r11; <- Do porÛwnania 
-	;movdqu xmm12, xmm11; <- Kopia do porÛwnaÒ
-	
-	;pshufb xmm15, xmmword ptr[multipleValue]
-	
-	;najpierw powinno byÊ mnoøenie razy intense
-	;mulss xmm13, xmm2;i jest mnoøonko
-	;mulss xmm14, xmm2
-	;mulss xmm15, xmm2
 
 	;dodawanie sk≥adowych przesuniÍtych do ciπgu wynikowego
 	paddb xmm10,xmm15
 	paddb xmm10,xmm14
 	paddb xmm10,xmm13
-
-	;mov BYTE PTR [RCX + R10], xmm13
-	;;;;;;;;;;;;;;;;;;;;;;;;;
-	;cmovc AX, R11W ;jesli wystapilo przeniesienie z bitu 7 na 8 (przekroczono maksymalna wartosc dla bajtu), zapisanie 0FFFFh w AX (0FFh w AL)
 	
-	movdqu xmmword ptr [RCX + R10], xmm10
-	;mov BYTE PTR [RCX + R10], AL ;zapisanie obliczonej wartosci bajtu do tablicy bajtow obrazu wynikowego pod tym samym indeksem
-
-	;inc EBX ;inkrementacja EBX, czyli indeksu koloru z tablicy skladowych BGR
-	;cmp EBX, 3 ;porownanie wartosci EBX z liczba skladowych piksela (24bpp RGB)
-	;cmove EBX, R9D ;zeby uniknac wykroczenia poza zakres tablicy, zapisanie 0 w EBX, jesli EBX jest rowne 3
-	
+	movdqu xmmword ptr [RCX + R10], xmm10; zapis piksela do obrazu wynikowego
 SkipByte: ;etykieta, do ktorej jest wykonywany skok w przypadku wykrycia bajtu nieprzechowujacego subpiksela
 	add R10, 3 ;inkrementacja indeksu tablicy R10
 	sub byteCount, 3 ;dekrementacja liczby bajtow do przetworzenie
