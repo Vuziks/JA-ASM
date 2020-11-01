@@ -136,23 +136,26 @@ MainLoop: ;glowna petla programu umozliwiajaca przetworzenie wszystkich bajtow z
 
 			;pmuldq xmm0, xmm1; TU BY BY£A TA WEKTOROWA
 
+	;sk≥adowe np. 00000000000000AA-000000BB000000CC
+	pmulhuw		xmm0, xmm1 ;wektor
+
 
 	movdqu xmm13, xmm0 ; -> wsadü pierwszπ sk≥adowπ
-	mulss xmm13, xmm1;mnoøenie razy intense
+				;mulss xmm13, xmm1;mnoøenie razy intense
 	paddb xmm13,xmm6;dodanie policzonego BGR
 	psrldq xmm0, 4
 	pslldq xmm13, 15
 	psrldq xmm13, 15
 
 	movdqu xmm14, xmm0; -> wsadü drugπ sk≥adowπ
-	mulss xmm14, xmm1;mnoøenie razy intense
+				;mulss xmm14, xmm1;mnoøenie razy intense
 	paddb xmm14,xmm7;dodanie policzonego BGR
 	psrldq xmm0, 4
 	pslldq xmm14, 15
 	psrldq xmm14, 14
 
 	movdqu xmm15, xmm0; -> wsadü trzeciπ sk≥adowπ
-	mulss xmm15, xmm1;mnoøenie razy intense
+				;mulss xmm15, xmm1;mnoøenie razy intense
 	paddb xmm15,xmm8;dodanie policzonego BGR
 	pslldq xmm15, 15
 	psrldq xmm15, 13

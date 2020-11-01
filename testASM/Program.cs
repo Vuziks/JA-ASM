@@ -27,7 +27,7 @@ namespace testASM
             int bytesToProcess = ImageByteCount / splitCount;
             int remainder = ImageByteCount % splitCount;
             int i = 0;
-            bool useASM = false;
+            bool useASM = true;
 
             BitmapData bitmapOutData = null, bitmapInData = null;
 
