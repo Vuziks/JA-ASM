@@ -13,11 +13,11 @@ namespace testASM
         static void Main(string[] args)
         {
             string imageName = string.Empty;
-            float filterOpacity = 0.7f;
-            byte red = 128, green = 30, blue = 144;
+            float filterOpacity = 0.8f;
+            byte red = 200, green = 70, blue = 200;
             int r, g, b;
             int splitCount = 1; 
-            bool useASM = false;
+            bool useASM = true;
 
             //Console.WriteLine("Podaj nazwę obrazu:");
             //imageName = Console.ReadLine();
@@ -32,7 +32,7 @@ namespace testASM
             //b = Convert.ToInt32(Console.ReadLine());
             //Console.Clear();
             //string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\" + imageName;
-            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\avg.bmp"; ;
+            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\aei.bmp"; ;
             Bitmap bmp = new Bitmap(filename);
             Bitmap imageIn;
             Bitmap ImageOut;
@@ -169,7 +169,7 @@ namespace testASM
 
 class ASM
 {
-    [DllImport(@"C:\Users\CLEVO\source\repos\JA-ASM\x64\Release\AsmDll.dll")]
+    [DllImport(@"C:\Users\CLEVO\source\repos\JA-ASM\x64\debug\AsmDll.dll")]
     public static unsafe extern void AddFilterASM(
         byte* resultBitmap,
         byte* originalBitmap,

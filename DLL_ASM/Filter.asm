@@ -129,7 +129,8 @@ MainLoop: ;glowna petla programu umozliwiajaca przetworzenie wszystkich bajtow z
 		psrldq xmm0, 8
 		pshufb xmm0, xmmword ptr[Mask1]
 	;sk≥adowe np. 00000000000000AA-000000BB000000CC
-	pmulhuw		xmm0, xmm1 ;wektor
+	;pmulhuw		xmm0, xmm1 ;wektor
+			mulps xmm0,xmm1
 
 	movdqu xmm13, xmm0 ; -> wsadü pierwszπ sk≥adowπ
 	paddb xmm13,xmm6;dodanie policzonego BGR
