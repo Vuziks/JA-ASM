@@ -50,30 +50,18 @@ AddFilterASM proc
 	mov byteCount, EAX ;przechowanie zawartosci EAX w zmiennej
 
 	mov R11B, BYTE PTR [RBP+56] ;pobranie wartosci skladowej czerwonej filtra ze stosu i zapisanie w R11B
-	cvtsd2si r10, xmm2
-	cvtsi2sd XMM0, R11 ;konwersja wartosci subpiksela na typ zmiennoprzecinkowy i przechowanie w rejestrze XMM0
-	mulsd XMM0, XMM2 ;pomnozenie wartosci subpiksela przez wartosc krycia i zapisanie w XMM0 (red * opacity)
-	;cvtsd2si R11, XMM0 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w R11
-		movd XMM6, R11
-		mulss xmm6, xmm2
+	movd XMM6, R11 ;przeniesienie skladowej do rejestru xmm
+	mulss xmm6, xmm2 ;opacity * skladowa -> xmm
 	mov BYTE PTR bgrComponent[2], R11B ;przepisanie czerwonej skladowej filtra z rejestru R11 do tablicy skladowych
 
 	mov R11B, BYTE PTR [RBP+64] ;pobranie wartosci skladowej zielonej filtra ze stosu i zapisanie w R11B
-	cvtsi2sd XMM0, R11 ;konwersja wartosci subpiksela na typ zmiennoprzecinkowy i przechowanie w rejestrze XMM0
-	mulsd XMM0, XMM2 ;pomnozenie wartosci subpiksela przez wartosc krycia i zapisanie w XMM0 (green * opacity)
-	;cvtsd2si R11, XMM0 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w R11
-		;movdqu XMM14, XMM0
-		movd XMM7, R11
-		mulss xmm7, xmm2
+	movd XMM7, R11 ;przeniesienie skladowej do rejestru xmm
+	mulss xmm7, xmm2 ;opacity * skladowa -> xmm
 	mov BYTE PTR bgrComponent[1], R11B ;przepisanie zielonej skladowej filtra z rejestru R11 do tablicy skladowych
 	
 	mov R11B, BYTE PTR [RBP+72] ;pobranie wartosci skladowej niebieskiej filtra ze stosu i zapisanie w R11B
-	cvtsi2sd XMM0, R11 ;konwersja wartosci subpiksela na typ zmiennoprzecinkowy i przechowanie w rejestrze XMM0
-	mulsd XMM0, XMM2 ;pomnozenie wartosci subpiksela przez wartosc krycia i zapisanie w XMM0 (blue * opacity)
-	;cvtsd2si R11, XMM0 ;ponowna konwersja wyliczonej wartosci na typ calkowity i zapisanie w R11
-		;movdqu XMM15, xmm0 
-		movd XMM8, R11
-		mulss xmm8, xmm2
+	movd XMM8, R11 ;przeniesienie skladowej do rejestru xmm
+	mulss xmm8, xmm2 ;opacity * skladowa -> xmm
 	mov BYTE PTR bgrComponent[0], R11B ;przepisanie niebieskiej skladowej filtra z rejestru R11 do tablicy skladowych
 
 	mov EAX, DWORD PTR [RBP + 80] ;pobranie szerokosci obrazu w pikselach ze stosu i zapisanie w EAX
@@ -121,33 +109,33 @@ MainLoop: ;glowna petla programu umozliwiajaca przetworzenie wszystkich bajtow z
 	pop RDX ;przywrocenie wskaznika na tablice bajtow obrazu pierwotnego ze stosu do RDX
 	sub EAX, rowWidth ;odjecie dlugosci wiersza od indeksu bajtu w wierszu i zapisanie w EAX
 	jns SkipByte ;pominiecie dalszego przetwarzania bajtu w razie, gdy indeks bajtu w wierszu wykracza poza dlugosc wiersza z subpikselami (currentByte % stride - rowWidth >=0 ? skok do SkipByte)
-		movdqu xmm0, xmmword PTR [RDX + R10]
-		movdqu xmm10, xmm0
-		psrldq xmm10, 1
-		pshufb xmm10, xmmword PTR [moveMask]
-		pslldq	xmm0, 8
-		psrldq xmm0, 8
-		pshufb xmm0, xmmword ptr[Mask1]
-	;sk³adowe np. 00000000000000AA-000000BB000000CC
-	;pmulhuw		xmm0, xmm1 ;wektor
-			mulps xmm0,xmm1
 
-	movdqu xmm13, xmm0 ; -> wsadŸ pierwsz¹ sk³adow¹
+	movdqu xmm0, xmmword PTR [RDX + R10] ;wypelnienie rejestru xmm0 kolejnymi skladowymi obrazu
+	movdqu xmm10, xmm0 ;przeniesienie skladowych do xmm10
+	psrldq xmm10, 1
+	pshufb xmm10, xmmword PTR [moveMask] ;operacje pozwalajace na "wyzerowanie" trzech ostatnich skladowych w rejestrze
+	pslldq	xmm0, 8
+	psrldq xmm0, 8
+	pshufb xmm0, xmmword ptr[Mask1] ;operacje ustawiajace trzy skladowe do przetworzenia co 32-bity w rejetrze xmm0
+	;sk³adowe np. 00000000000000AA-000000BB000000CC
+	mulps xmm0,xmm1 ; pomnozenie trzech skladowych razy (1-opacity)
+
+	movdqu xmm13, xmm0 ; -> pierwsza sk³adowa
 	paddb xmm13,xmm6;dodanie policzonego BGR
 	psrldq xmm0, 4
 	pslldq xmm13, 15
-	psrldq xmm13, 15
+	psrldq xmm13, 15; ustawienie skladowej na odpowiedniej pozycji
 
-	movdqu xmm14, xmm0; -> wsadŸ drug¹ sk³adow¹
+	movdqu xmm14, xmm0; ->  druga sk³adowa
 	paddb xmm14,xmm7;dodanie policzonego BGR
 	psrldq xmm0, 4
 	pslldq xmm14, 15
-	psrldq xmm14, 14
+	psrldq xmm14, 14; ustawienie skladowej na odpowiedniej pozycji
 
-	movdqu xmm15, xmm0; -> wsadŸ trzeci¹ sk³adow¹
+	movdqu xmm15, xmm0; ->  trzecia sk³adowa
 	paddb xmm15,xmm8;dodanie policzonego BGR
 	pslldq xmm15, 15
-	psrldq xmm15, 13
+	psrldq xmm15, 13; ustawienie skladowej na odpowiedniej pozycji
 
 	;dodawanie sk³adowych przesuniêtych do ci¹gu wynikowego
 	paddb xmm10,xmm15

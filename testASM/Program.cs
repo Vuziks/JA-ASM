@@ -13,8 +13,8 @@ namespace testASM
         static void Main(string[] args)
         {
             string imageName = string.Empty;
-            float filterOpacity = 0.8f;
-            byte red = 200, green = 70, blue = 200;
+            float filterOpacity = 0.6f;
+            byte red = 100, green = 30, blue = 128;
             int r, g, b;
             int splitCount = 1; 
             bool useASM = true;
@@ -146,8 +146,6 @@ namespace testASM
             GC.Collect();
 
             Console.WriteLine(watch.ElapsedMilliseconds);
-
-
         }
             public static Bitmap ConvertTo24bpp(Image img)
             {
