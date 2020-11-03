@@ -13,44 +13,45 @@ namespace testASM
         static void Main(string[] args)
         {
             string imageName = string.Empty;
-            float filterOpacity = 0.6f;
-            byte red = 100, green = 30, blue = 128;
+            float filterOpacity;
+            byte red, green, blue;
             int r, g, b;
-            int splitCount = 1; 
-            bool useASM = true;
+            int splitCount; 
+            bool useASM;
 
-            //Console.WriteLine("Podaj nazwę obrazu:");
-            //imageName = Console.ReadLine();
-            //Console.Clear();
-            //Console.WriteLine("intensywność filtra:");
-            //string filterOpacityString = Console.ReadLine();
-            //Console.Clear();
-            //Console.WriteLine("wartości składowych RGB:");
-            //Console.Clear();
-            //r = Convert.ToInt32(Console.ReadLine());
-            //g = Convert.ToInt32(Console.ReadLine());
-            //b = Convert.ToInt32(Console.ReadLine());
-            //Console.Clear();
-            //string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\" + imageName;
-            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\aei.bmp"; ;
+            Console.WriteLine("Podaj nazwę obrazu:");
+            imageName = Console.ReadLine();
+            Console.Clear();
+            Console.WriteLine("intensywność filtra (w %):");
+            int filterOpacityPercent = Convert.ToInt32(Console.ReadLine());
+            Console.Clear();
+            Console.WriteLine("wartości składowych RGB:");
+            r = Convert.ToInt32(Console.ReadLine());
+            g = Convert.ToInt32(Console.ReadLine());
+            b = Convert.ToInt32(Console.ReadLine());
+            Console.Clear();
+            Console.WriteLine("ilość wątków:");
+            splitCount = Convert.ToInt32(Console.ReadLine());
+            Console.Clear();
+            Console.WriteLine("użyć asemblera? (y/n)");
+            string useAsmString = Console.ReadLine();
+            useASM = useAsmString == "y" ? true : false; 
+            Console.Clear();
+            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\" + imageName;
             Bitmap bmp = new Bitmap(filename);
             Bitmap imageIn;
             Bitmap ImageOut;
             imageIn = ConvertTo24bpp(bmp);
             ImageOut = new Bitmap(imageIn.Width, imageIn.Height, PixelFormat.Format24bppRgb);
-            //filterOpacity = float.Parse(filterOpacityString);
-            //red = (byte)r;
-            //green = (byte)g;
-            //blue = (byte)b;
-
-
-            //int splitCount = 1;
+            filterOpacity = (float)filterOpacityPercent / 100;
+            red = (byte)r;
+            green = (byte)g;
+            blue = (byte)b;
             int threadCount = splitCount;
             int ImageByteCount = imageIn.Height * GetStride(imageIn);
             int bytesToProcess = ImageByteCount / splitCount;
             int remainder = ImageByteCount % splitCount;
             int i = 0;
-            //bool useASM = true;
 
             BitmapData bitmapOutData = null, bitmapInData = null;
 
@@ -70,8 +71,6 @@ namespace testASM
 
             while (i < splitCount)
             {
-                //watch.Start();
-
                 Thread[] threads = new Thread[threadCount];
                 switch (useASM)
                 {
@@ -145,9 +144,12 @@ namespace testASM
             ImageOut.Save("res.bmp");
             GC.Collect();
 
-            Console.WriteLine(watch.ElapsedMilliseconds);
+            Console.WriteLine("czas wykonania programu: " + watch.ElapsedMilliseconds);
+#if DEBUG
+            Console.WriteLine("uwaga, pomiar czasu w trybie DEBUG!");
+#endif
         }
-            public static Bitmap ConvertTo24bpp(Image img)
+        public static Bitmap ConvertTo24bpp(Image img)
             {
                 var bmp = new Bitmap(img.Width, img.Height, PixelFormat.Format24bppRgb);
                 using (var gr = Graphics.FromImage(bmp))
