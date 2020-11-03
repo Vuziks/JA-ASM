@@ -12,22 +12,42 @@ namespace testASM
     {
         static void Main(string[] args)
         {
-            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\aeibig.bmp";
-            float filterOpacity = 0.4f;
-            byte red = 120, green = 0, blue = 200;
+            string imageName = string.Empty;
+            float filterOpacity;
+            byte red, green, blue;
+            int r, g, b;
+
+            Console.WriteLine("Podaj nazwę obrazu:");
+            imageName = Console.ReadLine();
+            Console.Clear();
+            Console.WriteLine("intensywność filtra:");
+            string filterOpacityString = Console.ReadLine();
+            Console.Clear();
+            Console.WriteLine("wartości składowych RGB:");
+            Console.Clear();
+            r = Convert.ToInt32(Console.ReadLine());
+            g = Convert.ToInt32(Console.ReadLine());
+            b = Convert.ToInt32(Console.ReadLine());
+            Console.Clear();
+            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\" + imageName;
             Bitmap bmp = new Bitmap(filename);
             Bitmap imageIn;
             Bitmap ImageOut;
             imageIn = ConvertTo24bpp(bmp);
             ImageOut = new Bitmap(imageIn.Width, imageIn.Height, PixelFormat.Format24bppRgb);
+            filterOpacity = float.Parse(filterOpacityString);
+            red = (byte)r;
+            green = (byte)g;
+            blue = (byte)b;
 
-            int splitCount = 4;
+
+            int splitCount = 1;
             int threadCount = splitCount;
             int ImageByteCount = imageIn.Height * GetStride(imageIn);
             int bytesToProcess = ImageByteCount / splitCount;
             int remainder = ImageByteCount % splitCount;
             int i = 0;
-            bool useASM = false;
+            bool useASM = true;
 
             BitmapData bitmapOutData = null, bitmapInData = null;
 
@@ -145,7 +165,7 @@ namespace testASM
 
 class ASM
 {
-    [DllImport(@"C:\Users\CLEVO\source\repos\JA-ASM\x64\Release\AsmDll.dll")]
+    [DllImport(@"C:\Users\CLEVO\source\repos\JA-ASM\x64\Debug\AsmDll.dll")]
     public static unsafe extern void AddFilterASM(
         byte* resultBitmap,
         byte* originalBitmap,
