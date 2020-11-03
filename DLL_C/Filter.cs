@@ -1,4 +1,4 @@
-namespace DLL_C
+namespace CsDll
 {
     public static class Filter
     {

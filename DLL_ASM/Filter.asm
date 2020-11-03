@@ -21,9 +21,8 @@ _DllMainCRTStartup ENDP
 ;)
 .data
 Mask1 Byte 0,15,15,15,1,15,15,15,2,15,15,15,15,15,15,15
-multipleValue Byte 0,0,0,15,15,15,15,15,15,15,15,15,15,15,15,15
+multipleValue Byte 0,0,0,15,15,15,15,15,15,15,15,15,15,15,15,15  ;maski sluzace do przesuwania skladowych w rejestrach XMM
 moveMask Byte 15,15,15,2,3,4,5,6,7,8,9,10,11,12,13,14
-;moveMask Byte 15,14,13,12,11,10,9,8,7,6,5,4,3,0,0,0
 .code
 
 AddFilterASM proc

@@ -13,41 +13,44 @@ namespace testASM
         static void Main(string[] args)
         {
             string imageName = string.Empty;
-            float filterOpacity;
-            byte red, green, blue;
+            float filterOpacity = 0.7f;
+            byte red = 128, green = 30, blue = 144;
             int r, g, b;
+            int splitCount = 1; 
+            bool useASM = false;
 
-            Console.WriteLine("Podaj nazwę obrazu:");
-            imageName = Console.ReadLine();
-            Console.Clear();
-            Console.WriteLine("intensywność filtra:");
-            string filterOpacityString = Console.ReadLine();
-            Console.Clear();
-            Console.WriteLine("wartości składowych RGB:");
-            Console.Clear();
-            r = Convert.ToInt32(Console.ReadLine());
-            g = Convert.ToInt32(Console.ReadLine());
-            b = Convert.ToInt32(Console.ReadLine());
-            Console.Clear();
-            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\" + imageName;
+            //Console.WriteLine("Podaj nazwę obrazu:");
+            //imageName = Console.ReadLine();
+            //Console.Clear();
+            //Console.WriteLine("intensywność filtra:");
+            //string filterOpacityString = Console.ReadLine();
+            //Console.Clear();
+            //Console.WriteLine("wartości składowych RGB:");
+            //Console.Clear();
+            //r = Convert.ToInt32(Console.ReadLine());
+            //g = Convert.ToInt32(Console.ReadLine());
+            //b = Convert.ToInt32(Console.ReadLine());
+            //Console.Clear();
+            //string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\" + imageName;
+            string filename = @"D:\studia\Gildia Magów Ognia\JA\projekt\avg.bmp"; ;
             Bitmap bmp = new Bitmap(filename);
             Bitmap imageIn;
             Bitmap ImageOut;
             imageIn = ConvertTo24bpp(bmp);
             ImageOut = new Bitmap(imageIn.Width, imageIn.Height, PixelFormat.Format24bppRgb);
-            filterOpacity = float.Parse(filterOpacityString);
-            red = (byte)r;
-            green = (byte)g;
-            blue = (byte)b;
+            //filterOpacity = float.Parse(filterOpacityString);
+            //red = (byte)r;
+            //green = (byte)g;
+            //blue = (byte)b;
 
 
-            int splitCount = 1;
+            //int splitCount = 1;
             int threadCount = splitCount;
             int ImageByteCount = imageIn.Height * GetStride(imageIn);
             int bytesToProcess = ImageByteCount / splitCount;
             int remainder = ImageByteCount % splitCount;
             int i = 0;
-            bool useASM = true;
+            //bool useASM = true;
 
             BitmapData bitmapOutData = null, bitmapInData = null;
 
@@ -67,7 +70,7 @@ namespace testASM
 
             while (i < splitCount)
             {
-                watch.Start();
+                //watch.Start();
 
                 Thread[] threads = new Thread[threadCount];
                 switch (useASM)
@@ -85,7 +88,7 @@ namespace testASM
                                 break;
                             }
 
-                            threads[j] = new Thread(() => 
+                            threads[j] = new Thread(() =>
                             CsDll.Filter.AddFilterC(ref bufferOut, bufferIn, filterOpacity, begin, bytesToProcess, red, green, blue, bitmapInData.Width, bitmapInData.Stride));
                             i++;
                         }
@@ -114,6 +117,7 @@ namespace testASM
                         break;
                 }
 
+                watch.Start();
                 for (int j = 0; j < threadCount; j++)
                 {
                     if (threads[j] == null)
@@ -165,7 +169,7 @@ namespace testASM
 
 class ASM
 {
-    [DllImport(@"C:\Users\CLEVO\source\repos\JA-ASM\x64\Debug\AsmDll.dll")]
+    [DllImport(@"C:\Users\CLEVO\source\repos\JA-ASM\x64\Release\AsmDll.dll")]
     public static unsafe extern void AddFilterASM(
         byte* resultBitmap,
         byte* originalBitmap,

@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DLL_ASM\DLL_ASM.vcxproj" />
-    <ProjectReference Include="D:\studia\Gildia Magów Ognia\JA\JA-WP\Git\JA_W.Pszonak_FiltrGraficzny\Zrodla\DLL_C\CsDll.csproj" />
+    <ProjectReference Include="..\DLL_C\CsDll.csproj" />
   </ItemGroup>
 
 </Project>

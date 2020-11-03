@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MainProj", "testASM\MainPro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AsmDll", "DLL_ASM\DLL_ASM.vcxproj", "{132BF09A-CF72-4146-AC35-73F6CC0B734F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDll", "D:\studia\Gildia Magów Ognia\JA\JA-WP\Git\JA_W.Pszonak_FiltrGraficzny\Zrodla\DLL_C\CsDll.csproj", "{4C318442-3D14-4478-8B65-136241847850}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDll", "DLL_C\CsDll.csproj", "{4C318442-3D14-4478-8B65-136241847850}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
